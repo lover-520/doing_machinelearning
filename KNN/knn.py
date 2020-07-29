@@ -1,6 +1,7 @@
 from numpy import array, tile, zeros, shape
 import operator
 import matplotlib.pyplot as plt
+import os
 
 '''
 @function: 随便创建一组简单的数组进行演示
@@ -116,8 +117,8 @@ def classify_person(data, labels, flying_miles, playing_games_per, icecream_cons
     # icecream_consume = float(input("每周消费的冰淇淋公升数: "))
     norm_data, num_ranges, min_value = auto_norm(data)
     person = array([flying_miles, playing_games_per, icecream_consume])
-    classifier_result = knn((person - min_value) / num_ranges, norm_data
-                            , labels, 3)
+    classifier_result = knn((person - min_value) /
+                            num_ranges, norm_data, labels, 3)
     # print('您对这位先生的喜好程度大致为：', classifier_result)
     return classifier_result
 
@@ -145,16 +146,71 @@ def draw_data(data, labels):
     type1 = ax.scatter(type1_x, type1_y, s=10, c='r')
     type2 = ax.scatter(type2_x, type2_y, s=10, c='g')
     type3 = ax.scatter(type3_x, type3_y, s=10, c='b')
-    plt.legend((type1, type2, type3), ('didntLike', 'smallDoses', 'largeDoses'))
+    plt.legend((type1, type2, type3),
+               ('didntLike', 'smallDoses', 'largeDoses'))
     plt.show()
+
+
+'''
+@function: 将图片转化为向量格式
+'''
+
+
+def img2vector(filename):
+    returnvect = zeros((1, 1024))
+    fr = open(filename)
+    for i in range(32):
+        linestr = fr.readline()
+        for j in range(32):
+            returnvect[0, 32*i+j] = int(linestr[j])
+    return returnvect
+
+
+'''
+@function: 手写数字识别系统的测试代码
+'''
+
+
+def handwriting_class_test():
+	hwlabels = []
+	trainingfile_list = os.listdir('digits/trainingDigits/')
+	m = len(trainingfile_list)  # 表示里面总共有多少个文件
+	training_mat = zeros((m, 1024))
+	for i in range(m):
+		filename_str = trainingfile_list[i]  # 得到文件名
+		filename_str_pre = filename_str.split('.')[0]  # 得到前缀名
+		class_num = int(filename_str_pre.split('_')[0])
+		hwlabels.append(class_num)
+		training_mat[i, :] = img2vector('digits/trainingDigits/%s' %filename_str)
+	testfile_list = os.listdir('digits/testDigits/')
+	error_count = 0.0
+	mTest = len(testfile_list)
+	for i in range(mTest):
+		filename_str = testfile_list[i]
+		filename_str_pre = filename_str.split('.')[0]  # 得到前缀名
+		class_num = int(filename_str_pre.split('_')[0])
+		vectest = img2vector('digits/testDigits/%s' %filename_str)
+		class_result = knn(vectest, training_mat, hwlabels, 3)
+		# print('the classifier came back with: %d, the real answer is %d' 
+		# 	% (class_result, class_num))
+		if class_result != class_num:
+			error_count += 1.0
+			print('the classifier came back with: %d, the real answer is %d' 
+				% (class_result, class_num))
+	print('the total number of errors is: %d' % error_count)
+	print('the total error rate is: %f' % (error_count/float(mTest)))
 
 
 if __name__ == '__main__':
     # groups, labels = create_dataset()
     # result = knn([0, 0], groups, labels, 3)
     # print(result)
-    data, labels = file2matrix('datingTestSet2.txt')
+    # data, labels = file2matrix('datingTestSet2.txt')
     # draw_data(data, labels)
     # print(data)
     # class_test(data, labels, 0.10)
-    classify_person(data, 10000.0, 10.0, 0.06)
+    # print(classify_person(data, labels, 10000.0, 10.0, 0.06))
+    # testvect = img2vector('digits/testDigits/0_0.txt')
+    # print(testvect[0, 0:31])
+    # print(testvect[0, 32:63])
+    handwriting_class_test()
